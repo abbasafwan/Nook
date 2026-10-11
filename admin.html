@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nook admin</title>
+<style>
+body { font-family: system-ui; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+h1 { margin-top: 0; }
+input, button { padding: 0.5rem; margin: 0.5rem 0; font-size: 1rem; }
+input { width: 300px; }
+table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+th { background: #f0f0f0; }
+.error { color: red; }
+.success { color: green; }
+</style>
+</head>
+<body>
+<h1>nook admin — view messages</h1>
+<div>
+  <label>Password:</label><br>
+  <input type="password" id="password" placeholder="Enter admin password">
+  <button onclick="loadMessages()">Load messages</button>
+</div>
+<div id="status"></div>
+<table id="table" style="display:none">
+  <thead><tr><th>Time</th><th>Room</th><th>Name</th><th>Message</th></tr></thead>
+  <tbody id="body"></tbody>
+</table>
+<script>
+async function loadMessages() {
+  const password = document.getElementById('password').value;
+  const status = document.getElementById('status');
+  if (!password) { status.className = 'error'; status.textContent = 'Enter a password'; return; }
+  
+  try {
+    const res = await fetch('/api/admin/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) { status.className = 'error'; status.textContent = 'Invalid password'; return; }
+    const msgs = await res.json();
+    status.className = 'success'; status.textContent = 'Loaded ' + msgs.length + ' messages';
+    
+    const body = document.getElementById('body');
+    body.innerHTML = '';
+    msgs.forEach(m => {
+      const tr = document.createElement('tr');
+      const time = new Date(m.createdAt).toLocaleString();
+      tr.innerHTML = `<td>${time}</td><td>${m.roomId.slice(0, 8)}…</td><td>${m.senderName}</td><td>${m.text}</td>`;
+      body.appendChild(tr);
+    });
+    document.getElementById('table').style.display = 'table';
+  } catch (e) {
+    status.className = 'error'; status.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

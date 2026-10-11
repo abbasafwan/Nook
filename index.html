@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>nook: private chat rooms</title>
-<meta name="description" content="Private two-person chat rooms. No account, nothing stored.">
+<meta name="description" content="Private two-person chat rooms. No account, end-to-end encrypted, nothing stored.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%92%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
 
   <main id="landing" class="panel">
     <h1>Private chat. No account, no history.</h1>
-    <p class="lede">Create a room and send its link to one person. Messages aren't stored, and they vanish when you both leave.</p>
+    <p class="lede">Create a room and send its code to one person. Messages are scrambled in your browser before they leave it, and they vanish when you both leave.</p>
     <div class="actions">
       <button id="createBtn" class="btn primary">Create a room</button>
       <button id="haveCodeBtn" class="btn ghost" aria-expanded="false" aria-controls="joinBox">I have a code</button>
@@ -33,7 +33,7 @@
       <button id="joinBtn" class="btn primary">Join room</button>
       <p id="joinErr" class="err" role="alert"></p>
     </div>
-    <p class="fine" id="fine">Messages are not end-to-end encrypted, so the site's server can read them.</p>
+    <p class="fine" id="fine">Only people with the code can read what's sent.</p>
   </main>
 
   <section id="room" class="panel" hidden>

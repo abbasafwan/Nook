@@ -2,7 +2,7 @@
   "name": "nook",
   "version": "1.0.0",
   "private": true,
-  "description": "Private two-person chat rooms. No accounts, end-to-end encrypted, nothing stored.",
+  "description": "Private two-person chat rooms with admin message logging.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,6 +11,7 @@
   "engines": { "node": ">=18" },
   "dependencies": {
     "express": "^4.19.2",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "sqlite3": "^5.1.6"
   }
 }

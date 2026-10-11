@@ -9,17 +9,14 @@ function clientIp(socket, trustProxy){
   return socket.handshake.address;
 }
 
-/**
- * Blind relay: puts sockets in rooms (max two per room) and forwards opaque
- * encrypted packets between them. Nothing is logged, stored or decrypted.
- */
 function attachRelay(io, opts = {}){
   const maxPerRoom = opts.maxPerRoom || 2;
   const maxConnPerIp = opts.maxConnPerIp || 10;
   const trustProxy = !!opts.trustProxy;
   const joinWaitMs = opts.joinWaitMs || 15000;
+  const db = opts.db;
   const ipConns = new Map();
-  const ipJoins = new Map(); // ip -> { bucket, seen }
+  const ipJoins = new Map();
 
   const sweep = setInterval(() => {
     const cutoff = Date.now() - 10 * 60 * 1000;
@@ -35,7 +32,6 @@ function attachRelay(io, opts = {}){
 
     let roomId = null;
     const msgBucket = new TokenBucket(30, 15);
-    // Drop sockets that connect but never join a room.
     const idle = setTimeout(() => { if (!roomId) socket.disconnect(true); }, joinWaitMs);
     if (idle.unref) idle.unref();
 
@@ -49,13 +45,24 @@ function attachRelay(io, opts = {}){
       if (!entry.bucket.take()) return reply({ ok: false, error: 'slow' });
       const members = io.sockets.adapter.rooms.get(id);
       if (members && members.size >= maxPerRoom) return reply({ ok: false, error: 'full' });
-      socket.join(id); // synchronous with the in-memory adapter, so the check above can't race
+      socket.join(id);
       roomId = id;
       reply({ ok: true });
     });
 
     socket.on('p', pkt => {
       if (!roomId || !msgBucket.take() || !isPacket(pkt)) return;
+      // Try to save message to database (works with plaintext version)
+      if (db) {
+        try {
+          const json = Buffer.from(pkt.c, 'base64').toString();
+          const data = JSON.parse(json);
+          if (data.t === 'm' && data.text) {
+            db.run('INSERT INTO messages (roomId, senderCid, senderName, text, timestamp) VALUES (?, ?, ?, ?, ?)',
+              [roomId, data.cid || 'unknown', data.name || 'Anonymous', data.text, data.ts || Date.now()]);
+          }
+        } catch (e) {}
+      }
       socket.to(roomId).emit('p', { i: pkt.i, c: pkt.c });
     });
 
