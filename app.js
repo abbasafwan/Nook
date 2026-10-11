@@ -22,16 +22,13 @@ async function derive(secret){
   const key = await crypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
   return { roomId: 'r' + hex(r.slice(0, 16)), key };
 }
+// Encryption removed: packets are just base64 of the JSON, so the server can read them.
+// "i" is only a random id used to drop duplicate packets; "c" holds the message data.
 async function seal(key, roomId, obj){
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: enc.encode(roomId) }, key, enc.encode(JSON.stringify(obj)));
-  return { i: b64(iv), c: b64(new Uint8Array(ct)) };
+  return { i: b64(crypto.getRandomValues(new Uint8Array(12))), c: b64(enc.encode(JSON.stringify(obj))) };
 }
 async function unseal(key, roomId, pkt){
-  try {
-    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(pkt.i), additionalData: enc.encode(roomId) }, key, unb64(pkt.c));
-    return JSON.parse(dec.decode(pt));
-  } catch (e) { return null; }
+  try { return JSON.parse(dec.decode(unb64(pkt.c))); } catch (e) { return null; }
 }
 // </crypto>
 
